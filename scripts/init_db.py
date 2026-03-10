@@ -10,10 +10,13 @@ def get_connection():
         user     = os.getenv("DB_USER"),
         password = os.getenv("DB_PASSWORD"),
         host     = os.getenv("DB_HOST"),
-        port     = os.getenv("DB_PORT"),
+        port     = os.getenv("DB_PORT")
     )
 
 def create_tables(cursor):
+
+    cursor.execute("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";")
+    cursor.execute("CREATE EXTENSION IF NOT EXISTS vector;")
     
     # Vendors table
     cursor.execute("""
@@ -34,8 +37,7 @@ def create_tables(cursor):
             date DATE NOT NULL,
             amount NUMERIC NOT NULL,
             delivery_delays_days INT,
-            category TEXT,
-            description TEXT
+            category TEXT
         );
     """)
 

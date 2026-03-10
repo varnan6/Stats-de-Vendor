@@ -1,16 +1,19 @@
+import os
 import psycopg2
 import random
 import math
 from datetime import datetime, timedelta
 import uuid
+from dotenv import load_dotenv
 
 # Configuration
+load_dotenv()
 DB_CONFIG = {
-    "dbname"   : "vendor_db",
-    "user"     : "postgres",
-    "password" : "vendor_db",
-    "host"     : "localhost",
-    "port"     : "5432"
+    "dbname"   : os.getenv('DB_NAME'),
+    "user"     : os.getenv('DB_USER'),
+    "password" : os.getenv('DB_PASSWORD'),
+    "host"     : os.getenv('DB_HOST'),
+    "port"     : os.getenv('DB_PORT')
 }
 
 START_YEAR = 2023
@@ -49,7 +52,13 @@ def compute_monthly_spend(profile, month_index):
 def main():
     conn = psycopg2.connect(**DB_CONFIG)
     cur = conn.cursor()
+    
+    cur.execute("SELECT current_database();")
+    print("Connected DB:", cur.fetchone())
 
+    cur.execute("SELECT COUNT(*) FROM vendors;")
+    print("Vendor count:", cur.fetchone()[0])
+    
     # Fetch vendor IDs
     cur.execute("SELECT id FROM vendors;")
     vendor_ids = [row[0] for row in cur.fetchall()]
@@ -74,7 +83,7 @@ def main():
 
                 for split in splits:
                     amount = monthly_spend * split
-                    order_date = first_day + timedelta(days = random.randomint(0,27))
+                    order_date = first_day + timedelta(days = random.randint(0,27))
                     delay = random.gauss(profile["delay_mean"], profile["delay_std"])
                     delay = max(int(delay), 0)
                     delivery_date = order_date + timedelta(days = delay)
@@ -82,26 +91,25 @@ def main():
                     cur.execute(
                         """
                         INSERT INTO purchase_orders
-                        (id, vendor_id, order_amount, order_date, delivery_date)
+                        (id, vendor_id, date, amount, delivery_delays_days)
                         VALUES (%s, %s, %s, %s, %s);
                         """,
                         (
                             str(uuid.uuid4()),
                             vid,
-                            round(amount, 2),
                             order_date.date(),
-                            delivery_date.date()
+                            round(amount, 2),
+                            delay,
                         )
                     )
             
             month_index += 1
         
-        conn.commit()
-        cur.close()
-        conn.close()
+    conn.commit()
+    cur.close()
+    conn.close()
 
-        print("Synthetic purchase orders generated successfully.")
-
+    print("Synthetic purchase orders generated successfully.")
 
 if __name__ == "__main__":
     main()
