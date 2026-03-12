@@ -33,7 +33,7 @@ def create_tables(cursor):
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS purchase_orders (
             id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-            vendor_id UUID REFERENCES vendors(id) ON DELETE CASCADE,
+            vendor_id UUID PRIMARY KEY REFERENCES vendors(id) ON DELETE CASCADE,
             date DATE NOT NULL,
             amount NUMERIC NOT NULL,
             delivery_delays_days INT,
