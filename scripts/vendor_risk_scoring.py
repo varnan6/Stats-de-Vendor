@@ -19,7 +19,7 @@ def normalize(series):
     """
         Using min-max scaling
     """
-    return (series - series.min())/(series.max() - series.min())
+    return (series - series.min())/(series.max() - series.min()) if series.max() != series.min() else series*0
 
 
 def fetch_features():
@@ -34,7 +34,9 @@ def fetch_features():
         avg_delay,
         delay_std,
         total_orders
-    FROM vendor_features
+    FROM vendor_features vf
+    LEFT JOIN vendor_anomalies va
+    ON vf.vendor_id = va.vendor_id
     """
 
     df = pd.read_sql_query(query, conn)
@@ -52,6 +54,12 @@ def compute_risk(df):
     df["risk_score"] = (
         0.4*df["norm_volatility"] + 0.4*df["norm_delay"]
     )
+
+    df["anomaly_boost"] = df["is_anomaly"].fillna(False).astype(int)*0.2
+    df["anomaly_intensity"] = df["anomaly_score"].fillna(0).abs()
+    df["anomaly_intensity"] = normalize(df["anomaly_intensity"])*0.1
+
+    df["risk_score"] += (df["anomaly_boost"] + df["anomaly_intensity"])
 
     df["risk_score"] = (df["risk_score"]*100).round(2)
 
