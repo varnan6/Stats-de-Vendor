@@ -1,20 +1,6 @@
-from app.agent.router import route_query
+from fastapi import FastAPI
+from app.agent.router import router
 
-def main():
+app = FastAPI()
 
-    print("=== Vendor Analytics Agent ===")
-
-    while True:
-
-        query = input("\n> ")
-
-        if query.lower() in ["exit", "quit"]:
-            break
-
-        result = route_query(query)
-
-        print("\nResult:\n", result)
-
-
-if __name__ == "__main__":
-    main()
+app.include_router(router)
