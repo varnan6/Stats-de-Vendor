@@ -51,6 +51,22 @@ def create_tables(cursor):
         );
     """)
 
+    # Vendor risk table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS vendor_risk (
+            vendor_id UUID PRIMARY KEY,
+            risk_score FLOAT,
+            last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS vendor_anomalies (
+            vendor_id UUID PRIMARY KEY,
+            is_anomaly BOOLEAN,
+            anomaly_score FLOAT,
+            last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
+    """)
+
 def create_indexes(cursor):
 
     # Index for faster vendor-based lookups
