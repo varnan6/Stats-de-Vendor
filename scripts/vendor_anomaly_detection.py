@@ -59,7 +59,7 @@ def detect_anomalies(df):
         random_state=42
     )
 
-    df["anomaly_iforest"] = model.fit_predict(features)
+    df["anomaly_iforest"] = model.decision_function(features)
 
     # Convert to binary anomaly
     df["is_anomaly"] = df["anomaly_iforest"] == -1
@@ -83,7 +83,7 @@ def store_anomalies(df):
         """, (
             row["vendor_id"],
             row["is_anomaly"],
-            row["anomaly_iforest"]
+            row["anomaly_score"]
         ))
 
     conn.commit()
