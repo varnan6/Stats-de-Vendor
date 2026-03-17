@@ -5,6 +5,9 @@ from dotenv import load_dotenv
 from sklearn.ensemble import IsolationForest
 from scipy.stats import zscore
 
+from app.db.connection import get_connection
+
+
 load_dotenv()
 
 DB_CONFIG = {
@@ -63,6 +66,29 @@ def detect_anomalies(df):
 
     return df
 
+def store_anomalies(df):
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    for _, row in df.iterrows():
+        cur.execute("""
+        INSERT INTO vendor_anomalies (vendor_id, is_anomaly, anomaly_score)
+        VALUES (%s, %s, %s)
+        ON CONFLICT (vendor_id)
+        DO UPDATE SET
+            is_anomaly = EXCLUDED.is_anomaly,
+            anomaly_score = EXCLUDED.anomaly_score,
+            last_updated = CURRENT_TIMESTAMP;
+        """, (
+            row["vendor_id"],
+            row["is_anomaly"],
+            row["anomaly_iforest"]
+        ))
+
+    conn.commit()
+    conn.close()
+
 def main():
 
     print("=== Runnign vendor anomaly detection ===")
@@ -71,6 +97,8 @@ def main():
     df = detect_anomalies(df)
 
     anomalies = df[df["is_anomaly"] == True]
+
+    store_anomalies(df)
 
     print("\nDetected anomalous vendors: ")
     print(anomalies[[
