@@ -58,11 +58,11 @@ def detect_anomalies(df):
         contamination=0.15,
         random_state=42
     )
+    
+    model.fit(features)
 
-    df["anomaly_iforest"] = model.decision_function(features)
-
-    # Convert to binary anomaly
-    df["is_anomaly"] = df["anomaly_iforest"] == -1
+    df["anomaly_score"] = model.decision_function(features)
+    df["is_anomaly"] = df["anomaly_score"] == -1
 
     return df
 
