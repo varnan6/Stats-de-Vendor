@@ -3,6 +3,8 @@ import psycopg2
 import pandas as pd
 from dotenv import load_dotenv
 
+from app.db.connection import get_connection
+
 load_dotenv()
 
 DB_CONFIG = {
@@ -55,16 +57,34 @@ def compute_risk(df):
 
     return df
 
+def store_risk(df):
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    for _, row in df.iterrows():
+        cur.execute("""
+        INSERT INTO vendor_risk (vendor_id, risk_score)
+        VALUES (%s, %s)
+        ON CONFLICT (vendor_id)
+        DO UPDATE SET
+            risk_score = EXCLUDED.risk_score,
+            last_updated = CURRENT_TIMESTAMP;
+    """, (row["vendor_id"], row["risk_score"]))
+    
+    conn.commit()
+    conn.close()
 
 def main():
 
     print("=== Computing vendor risk scores ===")
 
     df = fetch_features()
-
     df = compute_risk(df)
 
     df = df.sort_values("risk_score", ascending=False)
+
+    store_risk(df)
 
     print("\nTop risky vendors: \n")
 
