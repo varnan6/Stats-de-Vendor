@@ -1,4 +1,4 @@
-from app.agent.router import route_query
+from app.agent.vendor_agent import route_query
 
 def main():
 
