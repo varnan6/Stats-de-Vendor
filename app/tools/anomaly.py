@@ -19,7 +19,7 @@ def get_anomalies():
     df["z_delay"] = zscore(df["avg_delay"])
 
     df["is_anomaly"] = (
-        df["z_spend"].abs() > 2 | df["z_delay"].abs() > 2
+        (df["z_spend"].abs() > 2) | (df["z_delay"].abs() > 2)
     )
 
-    return df[df["is_anomaly"]]
+    return df[df["is_anomaly"]].to_dict(orient = "records")
