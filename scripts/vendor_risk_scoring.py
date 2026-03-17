@@ -28,12 +28,14 @@ def fetch_features():
 
     query = """
     SELECT
-        vendor_id,
-        avg_spend,
-        spend_std,
-        avg_delay,
-        delay_std,
-        total_orders
+        vf.vendor_id,
+        vf.avg_spend,
+        vf.spend_std,
+        vf.avg_delay,
+        vf.delay_std,
+        vf.total_orders,
+        va.is_anomaly,
+        va.anomaly_score
     FROM vendor_features vf
     LEFT JOIN vendor_anomalies va
     ON vf.vendor_id = va.vendor_id
